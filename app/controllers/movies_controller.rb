@@ -11,17 +11,35 @@ class MoviesController < ApplicationController
   end
 
   def index
+    ratings = params[:ratings]
+    ratings_arr = []
+    ratings.each_key { |k| ratings_arr << k} unless ratings.nil?
+    
     sort_by = params[:sort_by]
     sort_by = sort_by.to_sym unless sort_by.nil?
+
+    # retrieve movies filtered by ratings and sorted as required
+    @movies = Movie.retrieve(ratings_arr, sort_by)
+
+    # keep track of sorting criteria
     if sort_by == :title
       @sorted = :title
-      @movies = Movie.order('title asc').all
     elsif sort_by == :date
       @sorted = :date
-      @movies = Movie.order('release_date asc').all
     else
       @sorted = nil
-      @movies = Movie.all
+    end
+
+    # retrieve rating values
+    @all_ratings = Movie.get_ratings
+    
+    # activate ratings
+    @active_ratings = Hash.new()
+    if ratings.nil?
+      @all_ratings.each { |r| @active_ratings[r] = true }
+    else
+      @all_ratings.each { |r| @active_ratings[r] = false }
+      ratings_arr.each { |r| @active_ratings[r] = true }
     end
   end
 
