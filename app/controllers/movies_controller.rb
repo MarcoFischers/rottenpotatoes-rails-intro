@@ -11,6 +11,7 @@ class MoviesController < ApplicationController
   end
 
   def index
+    # get URI parameters
     ratings = params[:ratings]
     ratings_arr = []
     ratings.each_key { |k| ratings_arr << k} unless ratings.nil?
@@ -18,6 +19,27 @@ class MoviesController < ApplicationController
     sort_by = params[:sort_by]
     sort_by = sort_by.to_sym unless sort_by.nil?
 
+    # retrieve previous settings from session
+    redir = false
+    ratings_sn = session[:ratings]
+    if ratings.nil? && !ratings_sn.nil?
+      ratings = ratings_sn
+      redir = true
+    end
+    sort_by_sn = session[:sort_by]
+    if sort_by.nil? && !sort_by_sn.nil?
+      sort_by = sort_by_sn
+      redir = true
+    end
+    if redir
+      flash.keep
+      redirect_to movies_path(sort_by: sort_by, ratings: ratings)
+    end
+    
+    # save session setting
+    session[:ratings] = ratings
+    session[:sort_by] = sort_by
+    
     # retrieve movies filtered by ratings and sorted as required
     @movies = Movie.retrieve(ratings_arr, sort_by)
 
